@@ -1,0 +1,69 @@
+# Local stack. `make up` starts it; the model downloads on first run (~400 MB).
+# On a Mac, Docker cannot use the GPU (Metal). For faster tokens, run the model
+# natively with `make model-native` and start with `make up-native`.
+services:
+  redis:
+    image: redis:7.4-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+
+  model:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    profiles: ["model"]
+    command: >
+      -hf ${MODEL_HF:-Qwen/Qwen2.5-0.5B-Instruct-GGUF:Q4_K_M}
+      --host 0.0.0.0 --port 8080
+      --parallel ${MAX_INFLIGHT:-4} --ctx-size 8192 --metrics
+    environment:
+      LLAMA_CACHE: /models
+    volumes: ["./models:/models"]
+    ports: ["8080:8080"]
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/health"]
+      interval: 5s
+      start_period: 300s
+
+  fake-model:
+    build: {context: ., dockerfile: tools/Dockerfile.fake-model}
+    profiles: ["fake"]
+    environment:
+      FAKE_SLOTS: ${MAX_INFLIGHT:-4}
+    ports: ["8080:8080"]
+
+  worker:
+    build: {context: ., dockerfile: worker/Dockerfile}
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      MODEL_URL: ${MODEL_URL:-http://model:8080}
+      BATCH_MODE: ${BATCH_MODE:-continuous}
+      MAX_INFLIGHT: ${MAX_INFLIGHT:-4}
+    depends_on:
+      redis: {condition: service_healthy}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  gateway:
+    build: {context: ., dockerfile: gateway/Dockerfile}
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      API_KEYS: ${API_KEYS:-dev-key}
+    ports: ["8000:8000"]
+    depends_on:
+      redis: {condition: service_healthy}
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    volumes: ["./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]

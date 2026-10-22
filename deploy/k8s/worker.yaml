@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: worker}}
+  template:
+    metadata:
+      labels: {app: worker}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "9100"}
+    spec:
+      containers:
+        - name: worker
+          image: inference-gateway/worker:dev
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: inference-config}}]
+          ports: [{containerPort: 9100}]
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {memory: 256Mi}

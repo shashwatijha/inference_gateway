@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+scrape_configs:
+  - job_name: gateway
+    static_configs: [{targets: ["gateway:8000"]}]
+  - job_name: worker
+    static_configs: [{targets: ["worker:9100"]}]
+  # llama.cpp exposes its own metrics with --metrics (tokens/s, KV cache usage, slots busy).
+  - job_name: model
+    static_configs: [{targets: ["model:8080", "host.docker.internal:8080"]}]

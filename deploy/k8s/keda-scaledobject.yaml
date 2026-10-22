@@ -1,0 +1,21 @@
+# Scale workers on queue length, not CPU: a worker waiting on the model server
+# uses almost no CPU, so CPU-based HPA would never scale it.
+# Requires KEDA (make keda). Field names follow KEDA's redis-streams scaler;
+# check them against the KEDA version you install.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker
+spec:
+  scaleTargetRef: {name: worker}
+  minReplicaCount: 1
+  maxReplicaCount: 4
+  pollingInterval: 5
+  cooldownPeriod: 60
+  triggers:
+    - type: redis-streams
+      metadata:
+        address: redis.inference.svc.cluster.local:6379
+        stream: requests
+        # Workers XDEL finished messages, so stream length = waiting + in flight.
+        streamLength: "8"

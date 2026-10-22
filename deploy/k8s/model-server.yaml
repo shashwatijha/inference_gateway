@@ -1,0 +1,46 @@
+# llama.cpp on CPU. Each pod downloads the model on start, which is the cold
+# start you will measure in milestone 7. A PVC or a baked image fixes it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: model}}
+  template:
+    metadata:
+      labels: {app: model}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "8080"}
+    spec:
+      containers:
+        - name: llama
+          image: ghcr.io/ggml-org/llama.cpp:server
+          args: ["-hf", "$(MODEL_HF)", "--host", "0.0.0.0", "--port", "8080",
+                 "--parallel", "4", "--ctx-size", "8192", "--metrics"]
+          env:
+            - {name: MODEL_HF, valueFrom: {configMapKeyRef: {name: inference-config, key: MODEL_HF}}}
+            - {name: LLAMA_CACHE, value: /models}
+          ports: [{containerPort: 8080}]
+          volumeMounts: [{name: models, mountPath: /models}]
+          resources:
+            requests: {cpu: "2", memory: 2Gi}
+            limits: {memory: 4Gi}
+          # Not ready until the model is downloaded and loaded; no traffic before that.
+          startupProbe:
+            httpGet: {path: /health, port: 8080}
+            periodSeconds: 5
+            failureThreshold: 120
+          readinessProbe:
+            httpGet: {path: /health, port: 8080}
+            periodSeconds: 5
+      volumes:
+        - name: models
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model
+spec:
+  selector: {app: model}
+  ports: [{port: 8080}]

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inference-config
+data:
+  REDIS_URL: redis://redis:6379/0
+  MODEL_URL: http://model:8080
+  MODEL_HF: Qwen/Qwen2.5-0.5B-Instruct-GGUF:Q4_K_M
+  BATCH_MODE: continuous
+  MAX_INFLIGHT: "4"
+  RATE_PER_SEC: "20"
+  RATE_BURST: "40"
+  MAX_QUEUE: "200"
+---
+# Local dev only. Real deployments keep secrets out of git (sealed-secrets, external-secrets).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: inference-secrets
+stringData:
+  API_KEYS: dev-key
