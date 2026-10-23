@@ -12,8 +12,11 @@ Prometheus scrapes all of it; Kubernetes runs it; KEDA scales workers on queue l
 
 ## Quickstart
 
+Python 3.12 is recommended (it's what Docker and CI use); 3.10 to 3.14 are supported. `make install` checks the version.
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
+brew install python@3.12                # if you don't have it
+python3.12 -m venv .venv && source .venv/bin/activate
 make install
 brew install redis && make test         # 16 tests: rate limiter, batcher, full stack with a fake model
 

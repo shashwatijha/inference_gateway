@@ -1,10 +1,17 @@
-.PHONY: install test up up-fake up-native down logs bench sim model-native kind-up images k8s-deploy keda k8s-forward k8s-down
+.PHONY: check-python install test up up-fake up-native down logs bench sim model-native kind-up images k8s-deploy keda k8s-forward k8s-down
 
 CLUSTER := inference
 NS := inference
 
-install:          ## Python deps for tests and tools (use a venv)
-	pip install -r requirements-dev.txt
+PYTHON ?= python
+
+check-python:     ## Supported: 3.10 to 3.14 (3.12 recommended, same as Docker and CI)
+	@$(PYTHON) -c 'import sys; v = sys.version_info[:2]; ok = (3, 10) <= v <= (3, 14); \
+	  print(f"Python {v[0]}.{v[1]}: " + ("ok" if ok else "unsupported. Recreate the venv with: python3.12 -m venv .venv")); \
+	  sys.exit(not ok)'
+
+install: check-python  ## Python deps for tests and tools (use a venv)
+	$(PYTHON) -m pip install -r requirements-dev.txt
 
 test:             ## Unit + end-to-end tests (needs redis-server: brew install redis)
 	python -m pytest -q
