@@ -1,4 +1,4 @@
-.PHONY: check-python install test up up-fake up-native down logs bench sim model-native kind-up images k8s-deploy keda k8s-forward k8s-down
+.PHONY: check-python install install-experiments test up up-fake up-native down logs bench sim model-native kind-up images k8s-deploy keda k8s-forward k8s-down
 
 CLUSTER := inference
 NS := inference
@@ -12,6 +12,9 @@ check-python:     ## Supported: 3.10 to 3.14 (3.12 recommended, same as Docker a
 
 install: check-python  ## Python deps for tests and tools (use a venv)
 	$(PYTHON) -m pip install -r requirements-dev.txt
+
+install-experiments: check-python  ## PyTorch + transformers for experiments/ (about 1 GB)
+	$(PYTHON) -m pip install -r experiments/requirements.txt
 
 test:             ## Unit + end-to-end tests (needs redis-server: brew install redis)
 	python -m pytest -q

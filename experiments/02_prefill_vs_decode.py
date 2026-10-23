@@ -16,7 +16,10 @@ how many requests fit on a GPU at once.
 import argparse
 import time
 
-import torch
+try:
+    import torch
+except ImportError:
+    raise SystemExit("PyTorch is not installed. Run: make install-experiments")
 from transformers import AutoConfig, AutoModelForCausalLM
 
 
@@ -66,7 +69,7 @@ def main() -> None:
 
     device = pick_device()
     dtype = torch.float16 if device != "cpu" else torch.float32
-    model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=dtype).to(device).eval()
+    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype).to(device).eval()
     vocab = model.config.vocab_size
     print(f"model={args.model} device={device} dtype={dtype}\n")
 

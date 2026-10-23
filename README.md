@@ -19,6 +19,7 @@ brew install python@3.12                # if you don't have it
 python3.12 -m venv .venv && source .venv/bin/activate
 make install
 brew install redis && make test         # 16 tests: rate limiter, batcher, full stack with a fake model
+make install-experiments                # PyTorch + transformers for experiments/ (week 1)
 
 make up-fake                            # whole stack, fake model, no download
 curl -s localhost:8000/v1/chat/completions -H 'Authorization: Bearer dev-key' \
