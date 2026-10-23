@@ -16,7 +16,10 @@ how many requests fit on a GPU at once.
 import argparse
 import time
 
-import torch
+try:
+    import torch
+except ImportError:
+    raise SystemExit("PyTorch is not installed. Run: make install-experiments")
 from transformers import AutoConfig, AutoModelForCausalLM
 
 

@@ -10,7 +10,7 @@ Small scripts, one per concept. Each prints numbers; write them down in `docs/no
 | 4 | `04_batching_sim.py` | static vs continuous batching | anywhere, pure Python |
 | 5 | commands below | speculative decoding | M3 or rented GPU |
 
-Setup: `python -m venv .venv && source .venv/bin/activate && pip install -r experiments/requirements.txt`. The first run of 1 and 2 downloads the model (about 1 GB).
+Setup: inside the repo's venv, run `make install-experiments` (PyTorch, transformers, matplotlib). `make install` does not include these. The first run of 1 and 2 downloads the model (about 1 GB).
 
 ## 3. Quantization (llama.cpp)
 

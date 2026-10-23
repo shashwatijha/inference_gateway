@@ -15,7 +15,10 @@ the candidate list shrink.
 import argparse
 import time
 
-import torch
+try:
+    import torch
+except ImportError:
+    raise SystemExit("PyTorch is not installed. Run: make install-experiments")
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
