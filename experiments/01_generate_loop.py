@@ -55,7 +55,7 @@ def main() -> None:
 
     device = pick_device()
     tok = AutoTokenizer.from_pretrained(args.model)
-    model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=torch.float16 if device != "cpu" else torch.float32)
+    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float16 if device != "cpu" else torch.float32)
     model.to(device).eval()
 
     # 1. Tokenize. The chat template wraps the prompt in the special tokens the model was trained on.
